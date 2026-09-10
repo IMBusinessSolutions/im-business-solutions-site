@@ -116,6 +116,19 @@ jobs:
                   DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
                   MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
               run: |
+                  # `composer dump-env` ne lit QUE les fichiers .env*, pas les
+                  # variables d'environnement du runner. On écrit donc les
+                  # valeurs de prod dans .env.prod.local (plus haute priorité
+                  # pour l'env prod) avant de compiler .env.local.php, puis on
+                  # supprime le fichier en clair avant l'upload.
+                  {
+                    echo "APP_ENV=prod"
+                    echo "APP_DEBUG=0"
+                    echo "APP_SECRET=${APP_SECRET}"
+                    echo "DATABASE_URL=\"${DATABASE_URL}\""
+                    if [ -n "${MAILER_DSN}" ]; then echo "MAILER_DSN=\"${MAILER_DSN}\""; fi
+                  } > .env.prod.local
+
                   composer install --no-dev --no-interaction --prefer-dist --no-progress \
                     --optimize-autoloader --classmap-authoritative
                   php bin/console importmap:install
@@ -123,6 +136,12 @@ jobs:
                   php bin/console cache:clear
                   php bin/console cache:warmup
                   composer dump-env prod
+
+                  # Contrôle : APP_SECRET et DATABASE_URL doivent être non vides
+                  # et != valeurs de dev dans le .env.local.php compilé.
+                  php -r '$e=require ".env.local.php"; if (empty($e["APP_SECRET"]) || str_contains($e["DATABASE_URL"] ?? "", "127.0.0.1")) { fwrite(STDERR, "ENV DE PROD NON PRIS EN COMPTE\n"); exit(1); } echo "env prod OK\n";'
+
+                  rm -f .env.prod.local .env.local
 
             # OVH mutualisé n'expose pas de FTPS fonctionnel sur le port 21
             # ("500 This security scheme is not implemented") mais active SFTP
