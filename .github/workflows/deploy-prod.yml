@@ -5,6 +5,9 @@ on:
         tags:
             - 'v*.*.*'
 
+permissions:
+    contents: read
+
 jobs:
     ci:
         name: Tests & vérifications
@@ -48,6 +51,13 @@ jobs:
             - name: Install Composer dependencies
               run: composer install --no-interaction --prefer-dist --no-progress
 
+            - name: Créer la base de test et les droits
+              run: |
+                  mysql -h 127.0.0.1 -uroot -proot -e "
+                    CREATE DATABASE IF NOT EXISTS \`app_test\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+                    GRANT ALL PRIVILEGES ON \`app_test\`.* TO 'app'@'%';
+                    FLUSH PRIVILEGES;"
+
             - name: Symfony container lint
               run: php bin/console lint:container --env=prod
 
@@ -77,20 +87,45 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Vérifier que le tag est sur main
+            - name: Vérifier que le tag est sur master
               id: check
               shell: bash
               run: |
-                  git fetch origin main --quiet
-                  if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-                    echo "on_main=true" >> "$GITHUB_OUTPUT"
+                  git fetch origin master --quiet
+                  if git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+                    echo "on_master=true" >> "$GITHUB_OUTPUT"
                   else
-                    echo "on_main=false" >> "$GITHUB_OUTPUT"
-                    echo "Tag non issu de main, déploiement prod ignoré."
+                    echo "on_master=false" >> "$GITHUB_OUTPUT"
+                    echo "::warning::Tag non issu de master, déploiement prod ignoré."
                   fi
 
-            - name: Déployer les fichiers publics sur OVH
-              if: steps.check.outputs.on_main == 'true'
+            - name: Setup PHP
+              if: steps.check.outputs.on_master == 'true'
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: intl,mbstring,pdo_mysql
+                  coverage: none
+
+            - name: Build production
+              if: steps.check.outputs.on_master == 'true'
+              env:
+                  APP_ENV: prod
+                  APP_DEBUG: '0'
+                  APP_SECRET: ${{ secrets.PROD_APP_SECRET }}
+                  DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+                  MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
+              run: |
+                  composer install --no-dev --no-interaction --prefer-dist --no-progress \
+                    --optimize-autoloader --classmap-authoritative
+                  php bin/console importmap:install
+                  php bin/console asset-map:compile
+                  php bin/console cache:clear
+                  php bin/console cache:warmup
+                  composer dump-env prod
+
+            - name: Déployer le projet sur OVH (FTPS)
+              if: steps.check.outputs.on_master == 'true'
               uses: SamKirkland/FTP-Deploy-Action@v4.3.5
               with:
                   server: ftp.cluster121.hosting.ovh.net
@@ -98,9 +133,43 @@ jobs:
                   password: ${{ secrets.OVH_FTP_PASSWORD }}
                   protocol: ftps
                   port: 21
-                  local-dir: ./public/
+                  local-dir: ./
                   server-dir: ./
+                  dangerous-clean-slate: false
                   exclude: |
-                      **/.DS_Store
-                      **/.git*
-                      **/.env*
+                      **/.git
+                      **/.git/**
+                      **/.gitignore
+                      **/.gitattributes
+                      **/.github/**
+                      **/node_modules/**
+                      **/tests/**
+                      **/var/**
+                      **/.idea/**
+                      **/docker/**
+                      **/compose*.yaml
+                      **/.env.local
+                      **/.env.*.local
+                      **/.env.test
+                      **/.env.dev
+                      **/phpunit.dist.xml
+                      **/phpunit.xml
+                      **/.phpunit.cache/**
+                      **/.php-cs-fixer.dist.php
+                      **/.php-cs-fixer.php
+                      **/package.json
+                      **/package-lock.json
+                      **/vite.config.js
+                      **/README.md
+                      **/AGENTS.md
+                      **/CLAUDE.md
+                      **/.editorconfig
+
+            - name: Appliquer les migrations sur la base de prod
+              if: steps.check.outputs.on_master == 'true'
+              env:
+                  APP_ENV: prod
+                  APP_DEBUG: '0'
+                  APP_SECRET: ${{ secrets.PROD_APP_SECRET }}
+                  DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+              run: php bin/console doctrine:migrations:migrate --no-interaction
