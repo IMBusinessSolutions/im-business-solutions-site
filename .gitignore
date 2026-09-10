@@ -15,9 +15,16 @@
 ###< phpunit/phpunit ###
 
 ###> symfony/asset-mapper ###
-/public/assets/
+/public/assets/*
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
 /public/build/
 /node_modules/
+
+# Le site vitrine statique stocke ses visuels sous public/assets/ (le reste
+# de ce dossier est compilé par AssetMapper au déploiement et reste ignoré).
+!/public/assets/images/
+!/public/assets/images/**
+!/public/assets/logo/
+!/public/assets/logo/**

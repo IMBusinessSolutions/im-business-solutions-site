@@ -37,7 +37,7 @@
         '</div>' +
 
         '<div class="modal__main">' +
-          '<form id="quote-form" action="api/devis.php" method="post" novalidate>' +
+          '<form id="quote-form" action="" method="post" novalidate>' +
             '<div class="hp-field" aria-hidden="true">' +
               '<label for="quote-website">Ne pas remplir ce champ</label>' +
               '<input type="text" id="quote-website" name="website" tabindex="-1" autocomplete="off">' +
@@ -374,52 +374,16 @@
       success.hidden = true;
       form.after(success);
 
+      // v1 : l'envoi serveur (api/contact.php / api/devis.php) n'est pas encore
+      // en place. On n'envoie rien et on oriente vers l'e-mail / le téléphone
+      // plutôt que d'afficher un faux « message envoyé ».
       form.addEventListener("submit", function (e) {
         e.preventDefault();
-        if (typeof form.reportValidity === "function" && !form.reportValidity()) {
-          return;
-        }
-
-        errorBox.hidden = true;
-        var submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = true;
-
-        fetch(form.getAttribute("action"), {
-          method: "POST",
-          body: new FormData(form),
-          headers: { Accept: "application/json" },
-        })
-          .then(function (res) {
-            return res
-              .json()
-              .catch(function () {
-                return {};
-              })
-              .then(function (data) {
-                return { ok: res.ok, data: data };
-              });
-          })
-          .then(function (result) {
-            if (result.ok && result.data && result.data.ok) {
-              form.hidden = true;
-              success.hidden = false;
-            } else {
-              var errors = result.data && result.data.errors;
-              var firstError = errors ? errors[Object.keys(errors)[0]] : null;
-              errorBox.textContent =
-                (result.data && result.data.error) ||
-                firstError ||
-                "Une erreur est survenue. Merci de réessayer.";
-              errorBox.hidden = false;
-            }
-          })
-          .catch(function () {
-            errorBox.textContent = "Connexion impossible. Vérifiez votre réseau et réessayez.";
-            errorBox.hidden = false;
-          })
-          .finally(function () {
-            if (submitBtn) submitBtn.disabled = false;
-          });
+        errorBox.innerHTML =
+          "Le formulaire est en cours de mise en place. Écrivez-nous à " +
+          '<a href="mailto:contact@im-business-solutions.fr">contact@im-business-solutions.fr</a> ' +
+          'ou appelez le <a href="tel:+33782988352">07&nbsp;82&nbsp;98&nbsp;83&nbsp;52</a>.';
+        errorBox.hidden = false;
       });
 
       form.resetState = function () {
