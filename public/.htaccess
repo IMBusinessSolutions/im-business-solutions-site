@@ -47,6 +47,11 @@ DirectoryIndex index.html index.php
     # Symfony /realisations. Redirection permanente pour les liens existants.
     RewriteRule ^realisations\.php$ %{ENV:BASE}/realisations [R=301,L]
 
+    # Racine "/" : servir la page d'accueil statique du site vitrine.
+    # (Sans cette règle, la réécriture ci-dessous enverrait "/" vers index.php
+    # et Symfony, qui n'a pas de route "/", répondrait 404.)
+    RewriteRule ^$ index.html [L]
+
     # Redirect to URI without front controller to prevent duplicate content
     # (with and without `/index.php`). Only do this redirect on the initial
     # rewrite by Apache and not on subsequent cycles. Otherwise we would get an
