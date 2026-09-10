@@ -165,11 +165,24 @@ jobs:
                       **/CLAUDE.md
                       **/.editorconfig
 
-            - name: Appliquer les migrations sur la base de prod
+            # La base OVH mutualisée (`*.mysql.db`) n'est joignable que depuis
+            # l'hébergement lui-même : les migrations sont donc appliquées via
+            # un endpoint one-shot déployé dans public/ (public/_migrate.php),
+            # protégé par APP_SECRET et qui s'autodétruit après succès.
+            # `continue-on-error` car au tout premier déploiement le domaine
+            # peut ne pas encore pointer sur public/ (bascule Multisite OVH).
+            - name: Appliquer les migrations (endpoint OVH)
               if: steps.check.outputs.on_master == 'true'
-              env:
-                  APP_ENV: prod
-                  APP_DEBUG: '0'
-                  APP_SECRET: ${{ secrets.PROD_APP_SECRET }}
-                  DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
-              run: php bin/console doctrine:migrations:migrate --no-interaction
+              continue-on-error: true
+              run: |
+                  set -o pipefail
+                  code=$(curl -sS -o /tmp/migrate.out -w '%{http_code}' --retry 3 --retry-delay 10 \
+                    "https://im-business-solutions.fr/_migrate.php?token=${{ secrets.PROD_APP_SECRET }}" || true)
+                  echo "HTTP $code"; cat /tmp/migrate.out
+                  if grep -q 'MIGRATION_OK' /tmp/migrate.out; then
+                    echo "Migrations appliquées."
+                  else
+                    echo "::warning::Migrations non confirmées (HTTP $code). "\
+                    "Vérifier la bascule Multisite vers public/, puis rappeler "\
+                    "https://im-business-solutions.fr/_migrate.php?token=***"
+                  fi
