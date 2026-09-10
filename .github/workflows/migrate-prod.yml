@@ -1,0 +1,28 @@
+name: Migrations prod (manuel)
+
+# Lancement manuel : Actions -> "Migrations prod (manuel)" -> Run workflow.
+# Appelle l'endpoint public/_migrate.php sur l'hébergement OVH (là où la base
+# MySQL est joignable) avec le jeton = APP_SECRET de prod, et affiche sa
+# sortie complète (utile pour diagnostiquer une erreur de connexion).
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    migrate:
+        name: Appliquer les migrations
+        runs-on: ubuntu-latest
+        steps:
+            - name: Appel de l'endpoint de migration
+              run: |
+                  set -o pipefail
+                  code=$(curl -sS -m 120 -o /tmp/out.txt -w '%{http_code}' \
+                    "https://im-business-solutions.fr/_migrate.php?token=${{ secrets.PROD_APP_SECRET }}" || true)
+                  echo "----- HTTP $code -----"
+                  cat /tmp/out.txt
+                  echo
+                  echo "----------------------"
+                  grep -q 'MIGRATION_OK' /tmp/out.txt
