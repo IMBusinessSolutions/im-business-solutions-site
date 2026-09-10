@@ -124,46 +124,49 @@ jobs:
                   php bin/console cache:warmup
                   composer dump-env prod
 
-            - name: Déployer le projet sur OVH (FTPS)
+            # OVH mutualisé n'expose pas de FTPS fonctionnel sur le port 21
+            # ("500 This security scheme is not implemented") mais active SFTP
+            # sur le port 22 (mêmes identifiants que le FTP). Upload via lftp,
+            # sans --delete pour ne pas toucher à www/ ni aux dotfiles du home.
+            - name: Déployer le projet sur OVH (SFTP)
               if: steps.check.outputs.on_master == 'true'
-              uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-              with:
-                  server: ftp.cluster121.hosting.ovh.net
-                  username: imbusim
-                  password: ${{ secrets.OVH_FTP_PASSWORD }}
-                  protocol: ftps
-                  port: 21
-                  local-dir: ./
-                  server-dir: ./
-                  dangerous-clean-slate: false
-                  exclude: |
-                      **/.git
-                      **/.git/**
-                      **/.gitignore
-                      **/.gitattributes
-                      **/.github/**
-                      **/node_modules/**
-                      **/tests/**
-                      **/var/**
-                      **/.idea/**
-                      **/docker/**
-                      **/compose*.yaml
-                      **/.env.local
-                      **/.env.*.local
-                      **/.env.test
-                      **/.env.dev
-                      **/phpunit.dist.xml
-                      **/phpunit.xml
-                      **/.phpunit.cache/**
-                      **/.php-cs-fixer.dist.php
-                      **/.php-cs-fixer.php
-                      **/package.json
-                      **/package-lock.json
-                      **/vite.config.js
-                      **/README.md
-                      **/AGENTS.md
-                      **/CLAUDE.md
-                      **/.editorconfig
+              env:
+                  OVH_PW: ${{ secrets.OVH_FTP_PASSWORD }}
+              run: |
+                  sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+                  lftp -c "
+                    set sftp:auto-confirm yes;
+                    set net:timeout 30;
+                    set net:max-retries 3;
+                    set net:reconnect-interval-base 5;
+                    set mirror:parallel-transfer-count 4;
+                    open -u imbusim,'$OVH_PW' sftp://ftp.cluster121.hosting.ovh.net:22;
+                    mirror --reverse --continue --no-perms --verbose=1 \
+                      --exclude '\.git' \
+                      --exclude '/\.github/' \
+                      --exclude '/node_modules/' \
+                      --exclude '/tests/' \
+                      --exclude '/var/' \
+                      --exclude '/\.idea/' \
+                      --exclude '/docker/' \
+                      --exclude '/\.phpunit\.cache/' \
+                      --exclude-glob '.env.local' \
+                      --exclude-glob '.env.*.local' \
+                      --exclude-glob '.env.test' \
+                      --exclude-glob '.env.dev' \
+                      --exclude-glob 'phpunit*.xml*' \
+                      --exclude-glob 'phpunit.dist.xml' \
+                      --exclude-glob '.php-cs-fixer*' \
+                      --exclude-glob 'package.json' \
+                      --exclude-glob 'package-lock.json' \
+                      --exclude-glob 'vite.config.js' \
+                      --exclude-glob 'compose*.yaml' \
+                      --exclude-glob '.editorconfig' \
+                      --exclude-glob 'AGENTS.md' \
+                      --exclude-glob 'CLAUDE.md' \
+                      --exclude-glob 'README.md' \
+                      ./ /home/imbusim/ ;
+                  "
 
             # La base OVH mutualisée (`*.mysql.db`) n'est joignable que depuis
             # l'hébergement lui-même : les migrations sont donc appliquées via
