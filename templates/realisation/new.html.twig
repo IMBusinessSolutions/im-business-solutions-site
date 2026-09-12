@@ -1,8 +1,11 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 {% block title %}Ajouter une réalisation{% endblock %}
 {% block body %}
-<div class="wrapper">
-    <h1>Ajouter une réalisation</h1>
-    {{ include('realisation/_form.html.twig', {button_label: 'Ajouter'}) }}
-</div>
+    <div class="admin-content__head">
+        <h1>Ajouter une réalisation</h1>
+    </div>
+    <div class="admin-card">
+        {{ include('realisation/_form.html.twig', {button_label: 'Ajouter'}) }}
+    </div>
+    <a href="{{ path('app_realisation_index') }}" class="admin-back">← Retour à la liste</a>
 {% endblock %}

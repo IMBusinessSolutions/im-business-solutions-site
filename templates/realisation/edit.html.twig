@@ -1,9 +1,14 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 {% block title %}Modifier une réalisation{% endblock %}
 {% block body %}
-<div class="wrapper">
-    <h1>Modifier une réalisation</h1>
-    {% if realisation.imagePath %}<p>Image actuelle : <img src="{{ realisation.imagePath }}" alt="" width="120"></p>{% endif %}
-    {{ include('realisation/_form.html.twig', {button_label: 'Enregistrer'}) }}
-</div>
+    <div class="admin-content__head">
+        <h1>Modifier une réalisation</h1>
+    </div>
+    <div class="admin-card">
+        {% if realisation.imagePath %}
+            <img src="{{ realisation.imagePath }}" alt="" width="120" style="border-radius:8px;margin-bottom:20px;">
+        {% endif %}
+        {{ include('realisation/_form.html.twig', {button_label: 'Enregistrer'}) }}
+    </div>
+    <a href="{{ path('app_realisation_index') }}" class="admin-back">← Retour à la liste</a>
 {% endblock %}

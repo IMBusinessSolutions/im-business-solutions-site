@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Administration{% endblock %} — IM Business Solutions</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+    <header class="admin-header">
+        <div class="container admin-header__inner">
+            <a href="{{ is_granted('IS_AUTHENTICATED_FULLY') ? path('app_realisation_index') : path('app_admin_login') }}" class="logo" aria-label="IM Business Solutions">
+                <img src="/assets/logo/im-business-solutions-white.png" alt="IM Business Solutions" width="48" height="38">
+            </a>
+
+            <nav class="admin-nav" aria-label="Navigation admin">
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <a href="{{ path('app_realisation_index') }}"{% if app.request.attributes.get('_route') starts with 'app_realisation' %} class="is-active"{% endif %}>Réalisations</a>
+                    <a href="{{ path('app_user_index') }}"{% if app.request.attributes.get('_route') starts with 'app_user' %} class="is-active"{% endif %}>Utilisateurs</a>
+                    <a href="/">Voir le site</a>
+                    <a href="{{ path('app_admin_logout') }}">Déconnexion</a>
+                {% else %}
+                    <a href="/">Retour au site</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-content">
+        <div class="container">
+            {% for message in app.flashes('success') %}
+                <div class="flash flash--success">{{ message }}</div>
+            {% endfor %}
+
+            {% block body %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

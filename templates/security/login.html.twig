@@ -1,9 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Connexion administrateur{% endblock %}
 
 {% block body %}
-    <main class="admin-login">
+    <div class="admin-login">
         <div class="admin-login__card">
             <p class="admin-login__eyebrow">Espace privé</p>
             <h1>Administration</h1>
@@ -21,8 +21,8 @@
                 <label for="password">Mot de passe</label>
                 <input type="password" id="password" name="_password" autocomplete="current-password" required>
 
-                <button type="submit">Se connecter</button>
+                <button type="submit" class="btn btn--gold">Se connecter</button>
             </form>
         </div>
-    </main>
+    </div>
 {% endblock %}
