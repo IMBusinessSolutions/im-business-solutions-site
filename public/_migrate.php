@@ -3,19 +3,25 @@
 declare(strict_types=1);
 
 /*
- * Exécuteur de migrations Doctrine « one-shot » pour l'hébergement OVH
- * mutualisé (pas d'accès SSH, base MySQL joignable uniquement depuis
+ * Exécuteur de migrations + vidage de cache « one-shot » pour l'hébergement
+ * OVH mutualisé (pas d'accès SSH, base MySQL joignable uniquement depuis
  * l'hébergement).
  *
  * - Appelé par le workflow de déploiement juste après l'upload FTP :
  *     GET /_migrate.php?token=<APP_SECRET de prod>
  * - Protégé par APP_SECRET (comparaison à temps constant) et limité à
  *   l'environnement prod.
- * - S'autodétruit après une migration réussie ; il est de toute façon
- *   idempotent (rejouer ne fait rien si la base est à jour).
+ * - Vide et réchauffe le cache prod (var/cache/prod n'est jamais mis à jour
+ *   autrement : le déploiement uploade le code via SFTP mais exclut /var/,
+ *   donc les templates/config compilés côté serveur restent périmés tant
+ *   que ce cache n'est pas invalidé depuis le serveur lui-même).
+ * - Puis applique les migrations Doctrine.
+ * - S'autodétruit après un run réussi ; il est de toute façon idempotent et
+ *   ré-uploadé à chaque déploiement (rejouer ne fait rien si la base est à
+ *   jour, et vider un cache déjà à jour ne casse rien).
  *
  * À terme, si un déploiement par SSH devient possible, supprimer ce fichier
- * et repasser sur `bin/console doctrine:migrations:migrate`.
+ * et repasser sur `bin/console cache:clear` / `doctrine:migrations:migrate`.
  */
 
 require dirname(__DIR__).'/vendor/autoload.php';
@@ -51,6 +57,19 @@ $application = new Application($kernel);
 $application->setAutoExit(false);
 
 $output = new BufferedOutput();
+
+$clearExitCode = $application->run(new ArrayInput([
+    'command' => 'cache:clear',
+    '--no-interaction' => true,
+]), $output);
+
+echo $output->fetch();
+
+if (0 !== $clearExitCode) {
+    http_response_code(500);
+    exit("\nMIGRATION_FAILED: vidage du cache, code de sortie {$clearExitCode}\n");
+}
+
 $exitCode = $application->run(new ArrayInput([
     'command' => 'doctrine:migrations:migrate',
     '--no-interaction' => true,
