@@ -22,7 +22,7 @@ security:
                 login_path: app_admin_login
                 check_path: app_admin_login
                 enable_csrf: true
-                default_target_path: app_user_index
+                default_target_path: app_realisation_index
             logout:
                 path: app_admin_logout
                 target: app_admin_login

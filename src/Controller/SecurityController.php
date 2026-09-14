@@ -13,7 +13,7 @@ final class SecurityController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_user_index');
+            return $this->redirectToRoute('app_realisation_index');
         }
 
         return $this->render('security/login.html.twig', [

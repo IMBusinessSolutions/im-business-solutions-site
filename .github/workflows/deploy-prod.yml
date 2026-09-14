@@ -87,16 +87,16 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Vérifier que le tag est sur main
+            - name: Vérifier que le tag est sur master
               id: check
               shell: bash
               run: |
-                  git fetch origin main --quiet
-                  if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+                  git fetch origin master --quiet
+                  if git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
                     echo "on_master=true" >> "$GITHUB_OUTPUT"
                   else
                     echo "on_master=false" >> "$GITHUB_OUTPUT"
-                    echo "::warning::Tag non issu de main, déploiement prod ignoré."
+                    echo "::warning::Tag non issu de master, déploiement prod ignoré."
                   fi
 
             - name: Setup PHP
