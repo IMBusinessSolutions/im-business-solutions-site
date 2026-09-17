@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/admin/includes/ui.php';
 
 $realisations = db()
     ->query("SELECT titre, categorie, description, image_path FROM realisations WHERE status = 'publie' ORDER BY created_at DESC")
@@ -139,13 +140,22 @@ $realisations = db()
           <ul class="projects-grid" id="projects-grid">
             <?php foreach ($realisations as $r): ?>
             <li class="project-card" data-cat="<?= h($r['categorie']) ?>">
-              <?php if (!empty($r['image_path'])): ?>
-              <img class="project-card__img" src="<?= h($r['image_path']) ?>" alt="<?= h($r['titre']) ?>" />
-              <?php else: ?>
-              <span class="project-card__placeholder" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-              </span>
-              <?php endif; ?>
+              <div class="project-card__media">
+                <?php if (!empty($r['image_path'])): ?>
+                <img class="project-card__img" src="<?= h($r['image_path']) ?>" alt="<?= h($r['titre']) ?>" loading="lazy" />
+                <?php else: ?>
+                <span class="project-card__placeholder" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
+                </span>
+                <?php endif; ?>
+                <span class="project-card__tag"><?= h(realisation_category_label($r['categorie'])) ?></span>
+              </div>
+              <div class="project-card__body">
+                <h3 class="project-card__title"><?= h($r['titre']) ?></h3>
+                <?php if (!empty($r['description'])): ?>
+                <p class="project-card__desc"><?= h($r['description']) ?></p>
+                <?php endif; ?>
+              </div>
             </li>
             <?php endforeach; ?>
           </ul>
