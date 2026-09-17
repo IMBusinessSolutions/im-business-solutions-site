@@ -5,17 +5,20 @@
 # (Composer/Docker/runner auto-hébergé). Ce site est en PHP simple sans
 # framework, sans build JS, hébergé en mutualisé classique : les étapes
 # ont été remplacées en conséquence (lint PHP au lieu de PHPUnit/Symfony,
-# déploiement FTPS au lieu de Docker Compose sur VPS).
+# déploiement SFTP au lieu de Docker Compose sur VPS).
+#
+# L'hébergement OVH de ce site n'accepte que le FTP simple ou le SFTP
+# (pas de FTPS) — voir Hébergements → FTP-SSH dans l'espace client OVH.
+# Le déploiement passe donc par SFTP (port 22), plus sûr que le FTP nu.
 #
 # Secrets GitHub à configurer avant le premier déploiement
 # (Settings → Secrets and variables → Actions) :
-#   FTP_SERVER      ex. ftp.im-business-solutions.fr
-#   FTP_USERNAME
+#   FTP_SERVER      ex. ftp.cluster121.hosting.ovh.net
+#   FTP_USERNAME    ex. imbusim
 #   FTP_PASSWORD
-#   FTP_SERVER_DIR  dossier racine web côté hébergeur, ex. /www/ ou /
-#
-# Si l'hébergeur propose le SFTP (recommandé, plus sûr que le FTP/FTPS),
-# remplacer l'étape de déploiement par l'action wlixcc/SFTP-Deploy-Action.
+#   FTP_SERVER_DIR  dossier cible côté hébergeur (le "." affiché dans
+#                    l'espace client OVH correspond à la racine du compte
+#                    FTP, c'est-à-dire déjà la racine web) — typiquement "."
 # =========================================================
 
 name: CI & Déploiement
@@ -71,7 +74,7 @@ jobs:
           fi
 
   deploy-prod:
-    name: Déploiement production (FTPS)
+    name: Déploiement production (SFTP)
     needs: ci
     runs-on: ubuntu-latest
     concurrency:
@@ -104,28 +107,44 @@ jobs:
           fi
 
       # =========================
-      # DEPLOY VIA FTPS
+      # PREPARER LES FICHIERS A DEPLOYER
       # (hébergement mutualisé : pas de VPS, pas de Docker, pas de runner
       # auto-hébergé nécessaire — un runner GitHub standard suffit)
+      #
+      # includes/config.php et assets/images/projets/ ne sont de toute façon
+      # pas versionnés (voir .gitignore) : cette liste est une protection
+      # supplémentaire pour qu'ils ne soient jamais touchés par le
+      # déploiement, même en cas d'erreur de configuration.
       # =========================
 
-      - name: Déployer par FTPS
+      - name: Préparer le dossier à déployer
         if: steps.check.outputs.on_main == 'true'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        run: |
+          mkdir -p /tmp/deploy
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.git/**' \
+            --exclude='.github' \
+            --exclude='.github/**' \
+            --exclude='sql' \
+            --exclude='sql/**' \
+            --exclude='includes/config.php' \
+            --exclude='assets/images/projets' \
+            --exclude='assets/images/projets/**' \
+            ./ /tmp/deploy/
+
+      # =========================
+      # DEPLOY VIA SFTP
+      # =========================
+
+      - name: Déployer par SFTP
+        if: steps.check.outputs.on_main == 'true'
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          # includes/config.php et assets/images/projets/ ne sont de toute
-          # façon pas versionnés (voir .gitignore) : cette liste est une
-          # protection supplémentaire pour qu'ils ne soient jamais touchés
-          # par le déploiement, même en cas d'erreur de configuration.
-          exclude: |
-            **/.git*
-            **/.git*/**
-            .github/**
-            sql/**
-            includes/config.php
-            assets/images/projets/**
+          port: 22
+          sftp_only: true
+          local_path: /tmp/deploy/*
+          remote_path: ${{ secrets.FTP_SERVER_DIR }}
