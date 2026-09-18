@@ -1,24 +1,33 @@
 # =========================================================
 # CI & Déploiement — IM Business Solutions
 #
-# Adapté d'un workflow de référence pensé pour une appli Symfony
-# (Composer/Docker/runner auto-hébergé). Ce site est en PHP simple sans
-# framework, sans build JS, hébergé en mutualisé classique : les étapes
-# ont été remplacées en conséquence (lint PHP au lieu de PHPUnit/Symfony,
-# déploiement SFTP au lieu de Docker Compose sur VPS).
+# Dépôt fusionné : l'application Symfony (racine du dépôt — src/,
+# templates/, vendor/ généré à la volée, etc.) et le site vitrine PHP/HTML
+# historique (dans public/, aux côtés des fichiers publics de Symfony).
+# Les deux cohabitent déjà dans le même document racine sur l'hébergement
+# OVH (compte FTP imbusim) : le déploiement copie donc tout le dépôt (à
+# l'exception des dossiers de dev) vers la racine de ce compte.
 #
-# L'hébergement OVH de ce site n'accepte que le FTP simple ou le SFTP
-# (pas de FTPS) — voir Hébergements → FTP-SSH dans l'espace client OVH.
-# Le déploiement passe donc par SFTP (port 22), plus sûr que le FTP nu.
+# Hébergement mutualisé, sans étape de build côté serveur : `composer
+# install` tourne ici, dans la CI, et le résultat (vendor/) est envoyé tel
+# quel. Les assets Symfony compilés (public/build/, public/assets/…) sont
+# directement commités dans le dépôt — pas de `npm run build` en CI.
 #
 # Secrets GitHub à configurer avant le premier déploiement
 # (Settings → Secrets and variables → Actions) :
 #   FTP_SERVER      ex. ftp.cluster121.hosting.ovh.net
 #   FTP_USERNAME    ex. imbusim
 #   FTP_PASSWORD
-#   FTP_SERVER_DIR  dossier cible côté hébergeur (le "." affiché dans
-#                    l'espace client OVH correspond à la racine du compte
-#                    FTP, c'est-à-dire déjà la racine web) — typiquement "."
+#   FTP_SERVER_DIR  dossier cible côté hébergeur ("." = racine du compte)
+#
+# ATTENTION : à ce jour, les runners GitHub Actions (IP Azure) ne
+# parviennent pas à joindre le port SSH/SFTP de cet hébergement OVH
+# (timeout réseau, cause probable : filtrage des IP de datacenters cloud
+# côté OVH). Ce workflow échoue donc à l'étape de déploiement tant que ce
+# blocage réseau n'est pas levé (contact support OVH, ou runner
+# auto-hébergé sur une machine que l'hébergeur laisse passer) — le
+# déploiement se fait alors manuellement (SFTP direct depuis une machine
+# qui, elle, est autorisée).
 # =========================================================
 
 name: CI & Déploiement
@@ -34,28 +43,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # =========================
-      # CHECKOUT
-      # =========================
-
       - name: Checkout
         uses: actions/checkout@v4
-
-      # =========================
-      # PHP
-      # =========================
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.1"
-          extensions: mbstring, pdo_mysql, fileinfo
+          php-version: "8.4"
+          extensions: mbstring, pdo_mysql, fileinfo, intl
           coverage: none
-
-      # =========================
-      # VERIFICATIONS
-      # (pas de Composer/npm/Symfony/PHPUnit : ce site n'en a pas besoin)
-      # =========================
 
       - name: Vérifier la syntaxe de tous les fichiers PHP
         run: |
@@ -63,13 +59,17 @@ jobs:
           while IFS= read -r -d '' file; do
             echo "-- $file"
             php -l "$file" || status=1
-          done < <(find . -name "*.php" -not -path "./.git/*" -print0)
+          done < <(find . -name "*.php" -not -path "./.git/*" -not -path "./vendor/*" -print0)
           exit $status
 
       - name: Vérifier qu'aucun identifiant réel n'est commité
         run: |
-          if [ -f includes/config.php ]; then
-            echo "::error::includes/config.php ne doit jamais être commité (il contient les identifiants de la base de données)."
+          if [ -f public/includes/config.php ]; then
+            echo "::error::public/includes/config.php ne doit jamais être commité (il contient les identifiants de la base de données)."
+            exit 1
+          fi
+          if [ -f .env.local.php ] || [ -f .env.local ]; then
+            echo "::error::.env.local(.php) ne doit jamais être commité (il contient les secrets Symfony de prod)."
             exit 1
           fi
 
@@ -82,18 +82,10 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      # =========================
-      # CHECKOUT
-      # =========================
-
       - name: Checkout du tag
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # =========================
-      # SECURITE : tag issu de main
-      # =========================
 
       - name: Vérifier que le tag est issu de main
         id: check
@@ -106,15 +98,27 @@ jobs:
             echo "Tag non issu de main, déploiement prod ignoré."
           fi
 
+      - name: Setup PHP + Composer
+        if: steps.check.outputs.on_main == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_mysql, fileinfo, intl
+          tools: composer
+          coverage: none
+
+      - name: Installer les dépendances PHP (vendor/, non commité)
+        if: steps.check.outputs.on_main == 'true'
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
       # =========================
       # PREPARER LES FICHIERS A DEPLOYER
-      # (hébergement mutualisé : pas de VPS, pas de Docker, pas de runner
-      # auto-hébergé nécessaire — un runner GitHub standard suffit)
       #
-      # includes/config.php et assets/images/projets/ ne sont de toute façon
-      # pas versionnés (voir .gitignore) : cette liste est une protection
-      # supplémentaire pour qu'ils ne soient jamais touchés par le
-      # déploiement, même en cas d'erreur de configuration.
+      # public/includes/config.php, .env.local(.php) et le contenu
+      # généré en prod (uploads, images de réalisations PHP) ne sont de
+      # toute façon pas versionnés (voir .gitignore) : cette liste est une
+      # protection supplémentaire pour qu'ils ne soient jamais touchés par
+      # le déploiement, même en cas d'erreur de configuration.
       # =========================
 
       - name: Préparer le dossier à déployer
@@ -128,14 +132,20 @@ jobs:
             --exclude='.github/**' \
             --exclude='sql' \
             --exclude='sql/**' \
-            --exclude='includes/config.php' \
-            --exclude='assets/images/projets' \
-            --exclude='assets/images/projets/**' \
+            --exclude='tests' \
+            --exclude='tests/**' \
+            --exclude='node_modules' \
+            --exclude='node_modules/**' \
+            --exclude='var/cache' \
+            --exclude='var/cache/**' \
+            --exclude='var/log' \
+            --exclude='var/log/**' \
+            --exclude='.env.local' \
+            --exclude='.env.local.php' \
+            --exclude='public/includes/config.php' \
+            --exclude='public/uploads/*' \
+            --exclude='public/assets/images/projets/*' \
             ./ /tmp/deploy/
-
-      # =========================
-      # DEPLOY VIA SFTP
-      # =========================
 
       - name: Déployer par SFTP
         if: steps.check.outputs.on_main == 'true'

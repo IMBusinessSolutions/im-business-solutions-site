@@ -1,16 +1,32 @@
 # Configuration locale (identifiants base de données / e-mail) — jamais commitée.
-# Voir includes/config.sample.php pour le modèle.
-/includes/config.php
+# Voir public/includes/config.sample.php pour le modèle.
+/public/includes/config.php
 
-# Photos des réalisations envoyées depuis l'admin : contenu généré en
+# Photos des réalisations envoyées depuis l'admin PHP : contenu généré en
 # production, pas du code source. Le dossier est recréé automatiquement
-# par admin/actions/realisation-save.php si besoin.
-/assets/images/projets/*
-!/assets/images/projets/.gitkeep
+# par public/admin/actions/realisation-save.php si besoin.
+/public/assets/images/projets/*
+!/public/assets/images/projets/.gitkeep
 
-# Fichiers système
+# Symfony — dépendances (régénérables via composer.lock / package-lock.json)
+/vendor/
+/node_modules/
+
+# Symfony — cache, logs
+/var/cache/
+/var/log/
+/var/share/
+
+# Symfony — configuration locale / secrets — jamais commitée
+/.env
+/.env.local
+/.env.local.php
+
+# Symfony — contenu généré en production (uploads utilisateurs)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Fichiers système / éditeurs
 .DS_Store
 Thumbs.db
-
-# Éditeurs / IDE
 /.idea/

@@ -1,0 +1,8 @@
+[
+    "\/assets\/stimulus_bootstrap.js",
+    "@hotwired\/turbo",
+    "\/assets\/styles\/app.css",
+    "@hotwired\/stimulus",
+    "\/assets\/controllers\/hello_controller.js",
+    "\/assets\/controllers\/csrf_protection_controller.js"
+]

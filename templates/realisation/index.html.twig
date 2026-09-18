@@ -1,0 +1,55 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% block title %}Réalisations{% endblock %}
+
+{% block body %}
+    {% set categories = {communication: 'Communication', developpement: 'Développement commercial', apport: "Apport d'affaires"} %}
+
+    <div class="admin-content__head">
+        <h1>Réalisations</h1>
+        <a href="{{ path('app_realisation_new') }}" class="btn btn--gold">Ajouter une réalisation</a>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Projet</th>
+                    <th>Catégorie</th>
+                    <th>Client</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for realisation in realisations %}
+                <tr>
+                    <td>
+                        {% if realisation.imagePath %}
+                            <img class="admin-table__thumb" src="{{ realisation.imagePath }}" alt="">
+                        {% endif %}
+                    </td>
+                    <td>{{ realisation.title }}</td>
+                    <td>{{ categories[realisation.category] ?? realisation.category }}</td>
+                    <td>{{ realisation.client ?: '—' }}</td>
+                    <td>
+                        <span class="status-badge status-badge--{{ realisation.status }}">
+                            {{ realisation.status == 'publie' ? 'Publié' : 'Brouillon' }}
+                        </span>
+                    </td>
+                    <td class="admin-table__actions">
+                        <a href="{{ path('app_realisation_edit', {id: realisation.id}) }}">Modifier</a>
+                        <form method="post" action="{{ path('app_realisation_delete', {id: realisation.id}) }}" onsubmit="return confirm('Supprimer cette réalisation ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ realisation.id) }}">
+                            <button type="submit" class="link-button">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6">Aucune réalisation pour l'instant.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
