@@ -227,6 +227,26 @@
     );
   }
 
+  /* ---------- Modale « Détail d'une réalisation » (markup injecté) ---------- */
+  var REALISATION_MODAL_HTML =
+    '<div class="modal modal--media" id="realisation-modal" role="dialog" aria-modal="true" aria-labelledby="realisation-modal-title" aria-hidden="true">' +
+      '<div class="modal__overlay" data-close></div>' +
+      '<div class="modal__dialog">' +
+        '<button type="button" class="modal__close" data-close aria-label="Fermer">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>' +
+        '</button>' +
+        '<div class="realisation-modal__media">' +
+          '<img class="realisation-modal__img" src="" alt="" hidden>' +
+          '<svg class="realisation-modal__placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>' +
+          '<span class="realisation-modal__tag"></span>' +
+        '</div>' +
+        '<div class="realisation-modal__body">' +
+          '<h2 class="realisation-modal__title" id="realisation-modal-title"></h2>' +
+          '<p class="realisation-modal__desc"></p>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
   document.addEventListener("DOMContentLoaded", function () {
     /* ---------- Année du footer ---------- */
     var yearEl = document.getElementById("year");
@@ -285,6 +305,7 @@
 
     /* ---------- Modales (devis + domaines d'expertise) ---------- */
     document.body.insertAdjacentHTML("beforeend", MODAL_HTML);
+    document.body.insertAdjacentHTML("beforeend", REALISATION_MODAL_HTML);
     EXPERTISE.forEach(function (dom) {
       document.body.insertAdjacentHTML("beforeend", buildExpertiseModal(dom));
     });
@@ -461,6 +482,51 @@
       filtersToggle.addEventListener("click", function () {
         var box = filtersToggle.closest(".filters");
         if (box) box.classList.toggle("is-expanded");
+      });
+    }
+
+    /* ---------- Détail d'une réalisation au clic sur sa carte ---------- */
+    if (projectCards.length) {
+      var realisationModal = document.getElementById("realisation-modal");
+      var openRealisation = function (card) {
+        if (!realisationModal) return;
+        var img = realisationModal.querySelector(".realisation-modal__img");
+        var placeholder = realisationModal.querySelector(".realisation-modal__placeholder");
+        var tag = realisationModal.querySelector(".realisation-modal__tag");
+        var title = realisationModal.querySelector(".realisation-modal__title");
+        var desc = realisationModal.querySelector(".realisation-modal__desc");
+        var imageSrc = card.getAttribute("data-image") || "";
+        var titleText = card.getAttribute("data-title") || "";
+
+        if (imageSrc) {
+          img.src = imageSrc;
+          img.alt = titleText;
+          img.hidden = false;
+          placeholder.hidden = true;
+        } else {
+          img.hidden = true;
+          img.removeAttribute("src");
+          placeholder.hidden = false;
+        }
+        tag.textContent = card.getAttribute("data-tag") || "";
+        title.textContent = titleText;
+        desc.textContent = card.getAttribute("data-desc") || "";
+
+        openModalById("realisation-modal");
+      };
+
+      projectCards.forEach(function (card) {
+        card.setAttribute("tabindex", "0");
+        card.setAttribute("role", "button");
+        card.addEventListener("click", function () {
+          openRealisation(card);
+        });
+        card.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openRealisation(card);
+          }
+        });
       });
     }
   });

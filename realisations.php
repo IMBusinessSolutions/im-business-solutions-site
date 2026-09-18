@@ -152,7 +152,14 @@ $realisations = db()
           <?php else: ?>
           <ul class="projects-grid" id="projects-grid">
             <?php foreach ($realisations as $r): ?>
-            <li class="project-card" data-cat="<?= h($r['categorie']) ?>">
+            <li
+              class="project-card"
+              data-cat="<?= h($r['categorie']) ?>"
+              data-title="<?= h($r['titre']) ?>"
+              data-desc="<?= h($r['description']) ?>"
+              data-tag="<?= h(realisation_category_label($r['categorie'])) ?>"
+              data-image="<?= h($r['image_path'] ?? '') ?>"
+            >
               <div class="project-card__media">
                 <?php if (!empty($r['image_path'])): ?>
                 <img class="project-card__img" src="<?= h($r['image_path']) ?>" alt="<?= h($r['titre']) ?>" loading="lazy" />
