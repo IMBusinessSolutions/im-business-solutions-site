@@ -1558,7 +1558,8 @@ a.contact-info__value:hover {
   display: block;
   width: min(680px, 100%);
   padding: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .modal--media .modal__close {
@@ -1571,20 +1572,21 @@ a.contact-info__value:hover {
 
 .realisation-modal__media {
   position: relative;
-  aspect-ratio: 16 / 9;
+  min-height: 220px;
+  max-height: min(60vh, 520px);
   display: grid;
   place-items: center;
   background: #e6e6e3;
   color: rgba(7, 20, 38, 0.22);
+  border-radius: 16px 16px 0 0;
   overflow: hidden;
 }
 
 .realisation-modal__media img {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: min(60vh, 520px);
+  object-fit: contain;
 }
 
 .realisation-modal__media svg {
