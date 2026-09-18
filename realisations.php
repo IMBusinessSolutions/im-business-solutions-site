@@ -36,10 +36,11 @@ $realisations = db()
       <div class="container site-header__inner">
         <a href="index.html" class="logo" aria-label="IM Business Solutions — Accueil">
           <img
-            src="assets/logo/im-business-solutions-white.png"
+            src="assets/logo/im-business-solutions-transparent.png"
+            style="transform: scale(1.25);"
             alt="IM Business Solutions"
-            width="150"
-            height="118"
+            width="130"
+            height="102"
           />
         </a>
 
@@ -201,7 +202,8 @@ $realisations = db()
       <div class="container site-footer__inner">
         <a href="index.html" class="footer-logo" aria-label="IM Business Solutions">
           <img
-            src="assets/logo/im-business-solutions-white.png"
+            src="assets/logo/im-business-solutions-transparent.png"
+            style="transform: scale(1.4);"
             alt="IM Business Solutions"
             width="150"
             height="118"
