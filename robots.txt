@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /includes/
+
+Sitemap: https://im-business-solutions.fr/sitemap.xml

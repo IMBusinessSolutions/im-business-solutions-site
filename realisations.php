@@ -19,6 +19,19 @@ $realisations = db()
       name="description"
       content="Une sélection de projets réalisés auprès d'entreprises et d'entrepreneurs accompagnés dans leur développement."
     />
+    <link rel="canonical" href="https://im-business-solutions.fr/realisations" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="IM Business Solutions" />
+    <meta property="og:title" content="Réalisations — IM Business Solutions" />
+    <meta
+      property="og:description"
+      content="Une sélection de projets réalisés auprès d'entreprises et d'entrepreneurs accompagnés dans leur développement."
+    />
+    <meta property="og:url" content="https://im-business-solutions.fr/realisations" />
+    <meta property="og:image" content="https://im-business-solutions.fr/assets/images/realisations-bg.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
