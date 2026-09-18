@@ -19,7 +19,7 @@
           '</span>' +
           '<h2 class="modal__title" id="quote-modal-title"><span>Demander</span><span class="accent">un devis</span></h2>' +
           '<span class="bar" aria-hidden="true"></span>' +
-          '<p>Décrivez votre projet en quelques informations et je vous proposerai une solution adaptée à vos besoins ainsi qu’un devis personnalisé.</p>' +
+          '<p>Décrivez votre projet en quelques informations et nous vous proposerons une solution adaptée à vos besoins ainsi qu’un devis personnalisé.</p>' +
           '<div class="modal__features">' +
             '<div class="modal__feature">' +
               '<span class="icon-circle icon-circle--solid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/></svg></span>' +
@@ -219,7 +219,7 @@
           '<ul class="xmodal__grid">' + cards + "</ul>" +
           '<div class="xmodal__foot">' +
             '<span class="xmodal__foot-icon" aria-hidden="true">' + svgWrap(ICO.message) + "</span>" +
-            "<p><strong>Vous avez un besoin qui n’apparaît pas dans cette liste ?</strong>Parlons-en. Je conçois également des solutions sur-mesure adaptées à votre projet.</p>" +
+            "<p><strong>Vous avez un besoin qui n’apparaît pas dans cette liste ?</strong>Parlons-en. Nous concevons également des solutions sur-mesure adaptées à votre projet.</p>" +
             '<a href="#" class="btn btn--gold" data-modal-open="quote-modal">Demander un devis <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>' +
           "</div>" +
         "</div>" +
@@ -453,11 +453,11 @@
 
     handleSubmit(
       quoteForm,
-      "Merci ! Votre demande de devis a bien été enregistrée. Je vous recontacte très rapidement."
+      "Merci ! Votre demande de devis a bien été enregistrée. Nous vous recontacterons très rapidement."
     );
     handleSubmit(
       document.getElementById("contact-form"),
-      "Merci ! Votre message a bien été envoyé. Je vous réponds dans les meilleurs délais."
+      "Merci ! Votre message a bien été envoyé. Nous vous répondrons dans les meilleurs délais."
     );
 
     /* ---------- Filtres des réalisations ---------- */
