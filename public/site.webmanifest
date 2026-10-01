@@ -1,0 +1,11 @@
+{
+  "name": "IM Business Solutions",
+  "short_name": "IM Business",
+  "icons": [
+    { "src": "/favicon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#00152F",
+  "background_color": "#00152F",
+  "display": "browser"
+}

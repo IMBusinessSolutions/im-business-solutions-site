@@ -2267,3 +2267,67 @@ a.contact-info__value:hover {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* =========================================================
+   PAGE — MENTIONS LÉGALES
+   ========================================================= */
+.page-hero--compact {
+  min-height: clamp(320px, 40vh, 420px);
+}
+
+.legal {
+  background: var(--white);
+  padding-block: clamp(48px, 7vw, 88px);
+  color: var(--text-dark);
+}
+
+.legal__inner {
+  max-width: 860px;
+}
+
+.legal__intro {
+  font-size: 1rem;
+  color: rgba(7, 20, 38, 0.72);
+}
+
+.legal h2 {
+  margin-top: clamp(32px, 4vw, 44px);
+  margin-bottom: 12px;
+  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.legal p,
+.legal li {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(7, 20, 38, 0.78);
+}
+
+.legal p + p {
+  margin-top: 12px;
+}
+
+.legal ul {
+  display: grid;
+  gap: 4px;
+}
+
+.legal a {
+  color: var(--gold-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.site-footer__legal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--ease);
+}
+
+.site-footer__legal a:hover {
+  color: var(--gold-light);
+}
