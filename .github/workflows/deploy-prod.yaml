@@ -109,7 +109,7 @@ jobs:
 
       - name: Installer les dépendances PHP (vendor/, non commité)
         if: steps.check.outputs.on_main == 'true'
-        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
 
       # =========================
       # PREPARER LES FICHIERS A DEPLOYER
